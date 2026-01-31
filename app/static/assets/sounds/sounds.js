@@ -35,98 +35,302 @@ class SoundEffects {
         oscillator.stop(this.audioContext.currentTime + duration);
     }
 
-    // Button click sound
+    // Button click sound - Soft water drop
     click() {
-        this.playTone(800, 0.05, 'sine', this.volume * 0.7);
-        setTimeout(() => this.playTone(600, 0.05, 'sine', this.volume * 0.5), 30);
+        if (!this.enabled) return;
+        
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 0.1);
+        
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+        filter.Q.setValueAtTime(10, this.audioContext.currentTime);
+        
+        gain.gain.setValueAtTime(this.volume * 0.3, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+        
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.15);
     }
 
-    // Hover sound (subtle)
+    // Hover sound - Gentle chime
     hover() {
-        this.playTone(1200, 0.08, 'sine', this.volume * 0.3);
+        if (!this.enabled) return;
+        
+        const osc1 = this.audioContext.createOscillator();
+        const osc2 = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc1.frequency.value = 1760; // A6
+        osc2.frequency.value = 2637; // E7 (fifth)
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        
+        gain.gain.setValueAtTime(this.volume * 0.15, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+        
+        osc1.start(this.audioContext.currentTime);
+        osc2.start(this.audioContext.currentTime);
+        osc1.stop(this.audioContext.currentTime + 0.2);
+        osc2.stop(this.audioContext.currentTime + 0.2);
     }
 
-    // Success notification (3-tone)
+    // Success notification - Wind chimes cascade
     success() {
-        this.playTone(523.25, 0.1, 'sine', this.volume);
-        setTimeout(() => this.playTone(659.25, 0.1, 'sine', this.volume), 100);
-        setTimeout(() => this.playTone(783.99, 0.15, 'sine', this.volume), 200);
+        if (!this.enabled) return;
+        
+        const notes = [523.25, 659.25, 783.99, 987.77]; // C-E-G-B
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                const filter = this.audioContext.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                
+                filter.type = 'lowpass';
+                filter.frequency.value = 3000;
+                filter.Q.value = 5;
+                
+                gain.gain.setValueAtTime(this.volume * 0.25, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                
+                osc.start(this.audioContext.currentTime);
+                osc.stop(this.audioContext.currentTime + 0.4);
+            }, i * 80);
+        });
     }
 
-    // Error sound
+    // Error sound - Soft descending tone
     error() {
-        this.playTone(300, 0.1, 'sawtooth', this.volume);
-        setTimeout(() => this.playTone(250, 0.15, 'sawtooth', this.volume), 100);
+        if (!this.enabled) return;
+        
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.3);
+        
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        
+        gain.gain.setValueAtTime(this.volume * 0.25, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+        
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.3);
     }
 
-    // Notification ping
+    // Notification ping - Soft bell
     notification() {
-        this.playTone(880, 0.08, 'sine', this.volume * 0.8);
-        setTimeout(() => this.playTone(1046.5, 0.12, 'sine', this.volume * 0.8), 80);
+        if (!this.enabled) return;
+        
+        const frequencies = [880, 1320, 1760]; // Harmonic series
+        frequencies.forEach((freq, i) => {
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            
+            osc.connect(gain);
+            gain.connect(this.audioContext.destination);
+            
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            
+            const vol = this.volume * 0.2 * (1 - i * 0.3);
+            gain.gain.setValueAtTime(vol, this.audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+            
+            osc.start(this.audioContext.currentTime);
+            osc.stop(this.audioContext.currentTime + 0.5);
+        });
     }
 
-    // Toggle switch
+    // Toggle switch - Soft tick
     toggle() {
-        this.playTone(1000, 0.05, 'square', this.volume * 0.5);
+        if (!this.enabled) return;
+        
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.value = 800;
+        
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        filter.Q.value = 20;
+        
+        gain.gain.setValueAtTime(this.volume * 0.2, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
+        
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.05);
     }
 
-    // Pop/drop sound
+    // Pop/drop sound - Raindrop
     pop() {
         if (!this.enabled) return;
         
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
         
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioContext.destination);
         
-        oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.1);
-        oscillator.type = 'sine';
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1800, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.08);
         
-        gainNode.gain.setValueAtTime(this.volume * 1.5, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3000, this.audioContext.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.08);
+        filter.Q.value = 8;
         
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + 0.1);
+        gain.gain.setValueAtTime(this.volume * 0.4, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.12);
+        
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.12);
     }
 
-    // Whoosh sound
+    // Whoosh sound - Gentle breeze
     whoosh() {
         if (!this.enabled) return;
         
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
+        // Create noise buffer
+        const bufferSize = this.audioContext.sampleRate * 0.3;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
         
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
         
-        oscillator.frequency.setValueAtTime(1500, this.audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(300, this.audioContext.currentTime + 0.3);
-        oscillator.type = 'sawtooth';
+        const noise = this.audioContext.createBufferSource();
+        const filter = this.audioContext.createBiquadFilter();
+        const gain = this.audioContext.createGain();
         
-        gainNode.gain.setValueAtTime(this.volume * 0.7, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+        noise.buffer = buffer;
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioContext.destination);
         
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + 0.3);
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.3);
+        filter.Q.value = 2;
+        
+        gain.gain.setValueAtTime(this.volume * 0.15, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+        
+        noise.start(this.audioContext.currentTime);
+        noise.stop(this.audioContext.currentTime + 0.3);
     }
 
-    // Tab switch
+    // Tab switch - Soft marimba
     tabSwitch() {
-        this.playTone(700, 0.06, 'triangle', this.volume * 0.4);
+        if (!this.enabled) return;
+        
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        
+        filter.type = 'lowpass';
+        filter.frequency.value = 2000;
+        filter.Q.value = 3;
+        
+        gain.gain.setValueAtTime(this.volume * 0.25, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+        
+        osc.start(this.audioContext.currentTime);
+        osc.stop(this.audioContext.currentTime + 0.2);
     }
 
-    // Modal open
+    // Modal open - Ascending sparkle
     modalOpen() {
-        this.playTone(600, 0.08, 'sine', this.volume * 0.5);
-        setTimeout(() => this.playTone(900, 0.12, 'sine', this.volume * 0.5), 60);
+        if (!this.enabled) return;
+        
+        const notes = [523, 659, 784]; // C-E-G chord
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(this.volume * 0.2, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                
+                osc.start(this.audioContext.currentTime);
+                osc.stop(this.audioContext.currentTime + 0.3);
+            }, i * 40);
+        });
     }
 
-    // Modal close
+    // Modal close - Descending sparkle
     modalClose() {
-        this.playTone(900, 0.08, 'sine', this.volume * 0.5);
-        setTimeout(() => this.playTone(600, 0.12, 'sine', this.volume * 0.5), 60);
+        if (!this.enabled) return;
+        
+        const notes = [784, 659, 523]; // G-E-C chord (reversed)
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(this.volume * 0.2, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                
+                osc.start(this.audioContext.currentTime);
+                osc.stop(this.audioContext.currentTime + 0.3);
+            }, i * 40);
+        });
     }
 
     // Enable/disable sounds
