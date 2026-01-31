@@ -29,7 +29,10 @@ async def generate_tts_batch(entries, tts_enabled):
     
     # Attach results to entries
     for entry, tts_result in zip(entries, tts_results):
-        entry["tts"] = tts_result if not isinstance(tts_result, Exception) else None
+        if not isinstance(tts_result, Exception) and tts_result:
+            entry["tts"] = f"/tts_output/{tts_result}"
+        else:
+            entry["tts"] = None
     
     return entries
 
